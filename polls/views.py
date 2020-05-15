@@ -12,10 +12,7 @@ def index(request):
 
 
 def detail(request, poll_id):
-    try:
-        poll = Poll.objects.get(pk=poll_id)
-    except Poll.DoesNotExist:
-        raise Http404
+    poll = get_object_or_404(Poll, pk=poll_id)
     return render(request, 'polls/detail.html', {'poll': poll})
 
 
