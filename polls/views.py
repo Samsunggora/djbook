@@ -1,8 +1,7 @@
-from django.http import HttpResponse
-from django.template import RequestContext, loader
-from polls.models import Poll
-from django.shortcuts import render
-from django.http import Http404
+from django.shortcuts import get_object_or_404, render
+from django.http import HttpResponseRedirect, HttpResponse
+from django.core.urlresolvers import reverse
+from polls.models import Choice, Poll
 
 
 def index(request):
@@ -21,5 +20,16 @@ def results(request, poll_id):
 
 
 def vote(request, poll_id):
-    return HttpResponse("You're voting on poll %s." % poll_id)
-
+    p = get_object_or_404(Poll, pk=poll_id)
+    try:
+        selected_choice = p.choice_set.get(pk=request.POST['choice'])
+    except (KeyError, Choice.DoesNotExist):
+        # Redisplay the poll voting form.
+        return render(request, 'polls/detail.html', {
+            'poll': p,
+            'error_message': "You didn't select a choice.",
+        })
+    else:
+        selected_choice.votes += 1
+        selected_choice.save()
+        return HttpResponseRedirect(reverse('polls:results', args=(p.id,)))
